@@ -1,6 +1,8 @@
-import './login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
+
 import './registration_screen.dart';
+import './login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   static const String id = 'welcome_screen';
@@ -26,7 +28,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 //curved animation
     // animation = CurvedAnimation(parent: controller, curve: Curves.decelerate);
 
-    animation = ColorTween(begin: Colors.blueGrey, end: Colors.white).animate(controller);
+    animation = ColorTween(begin: Colors.blueGrey, end: Colors.white)
+        .animate(controller);
 
     controller.forward();
 // bouncing animation
@@ -71,12 +74,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     height: 60.0,
                   ),
                 ),
-                Text(
-                  'Flash Chat',
-                  style: TextStyle(
-                    fontSize: 45.0,
-                    fontWeight: FontWeight.w900,
-                  ),
+                AnimatedTextKit(
+                  animatedTexts: [
+                    TypewriterAnimatedText(
+                      'Flash Chat',
+                      textStyle: const TextStyle(
+                        fontSize: 45.0,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                  isRepeatingAnimation: false,
                 ),
               ],
             ),
