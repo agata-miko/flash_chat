@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show timeDilation;
 
 class RegistrationScreen extends StatefulWidget {
+  static const String id = 'registration_screen';
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
 }
@@ -8,6 +10,7 @@ class RegistrationScreen extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
+    timeDilation = 2;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
@@ -16,9 +19,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Container(
-              height: 200.0,
-              child: Image.asset('images/logo.png'),
+            Hero(tag: 'logo',
+              child: Container(
+                height: 200.0,
+                child: Image.asset('images/logo.png'),
+              ),
             ),
             SizedBox(
               height: 48.0,
