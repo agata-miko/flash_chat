@@ -6,6 +6,7 @@ import '../components/rounded_button.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -22,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Hero(tag: 'logo',
+            Hero(
+              tag: 'logo',
               child: Container(
                 height: 200.0,
                 child: Image.asset('images/logo.png'),
@@ -32,24 +34,39 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 48.0,
             ),
             TextField(
+              keyboardType: TextInputType.emailAddress,
+              textAlign: TextAlign.center,
               onChanged: (value) {
                 //Do something with the user input.
               },
-              decoration: kTextFieldDecoration.copyWith(hintText: 'Enter your email'),
+              decoration:
+                  kTextFieldDecoration.copyWith(hintText: 'Enter your email'),
             ),
             SizedBox(
               height: 8.0,
             ),
             TextField(
+              obscureText: true,
+              textAlign: TextAlign.center,
               onChanged: (value) {
                 //Do something with the user input.
               },
-              decoration: kTextFieldDecoration.copyWith(hintText: 'Enter your password'),
+              decoration: kTextFieldDecoration.copyWith(
+                  hintText: 'Enter your password'),
             ),
             SizedBox(
               height: 24.0,
             ),
-            RoundedButton(color: Colors.lightBlueAccent, route: WelcomeScreen.id, text: 'Log in'),
+            RoundedButton(
+                color: Colors.lightBlueAccent,
+                onPress: () {
+                  Navigator.pushNamed(
+                    context,
+                    WelcomeScreen.id,
+                  );
+                  //Go to registration screen.
+                },
+                text: 'Log in'),
           ],
         ),
       ),
