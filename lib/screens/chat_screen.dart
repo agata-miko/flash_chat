@@ -16,21 +16,35 @@ class _ChatScreenState extends State<ChatScreen> {
   late String loggedInUser;
   late String messageText;
 
-
   @override
   void initState() {
     super.initState();
     getCurrentUser();
   }
 
-  void getCurrentUser()  {
+  void getCurrentUser() {
     try {
-      final user =  _auth.currentUser!.email;
+      final user = _auth.currentUser!.email;
       if (user != null) {
         loggedInUser = user;
       }
     } catch (e) {
       print(e);
+    }
+  }
+
+  // void getMessages() async {
+  //   final messages = await _firestore.collection('messages').get();
+  //   for (var message in messages.docs) {
+  //     print(message.data().toString());
+  //   }
+  // }
+
+  void messagesStream() async {
+    await for (var snapshot in _firestore.collection('messages').snapshots()) {
+      for (var message in snapshot.docs) {
+        print(message.data().toString());
+      }
     }
   }
 
@@ -43,8 +57,9 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
               icon: const Icon(Icons.close),
               onPressed: () {
-                _auth.signOut();
-                Navigator.pop(context);
+                messagesStream();
+                // _auth.signOut();
+                // Navigator.pop(context);
               }),
         ],
         title: const Text('⚡️Chat'),
