@@ -2,7 +2,9 @@ import 'package:flash_chat/constants.dart';
 import 'package:flash_chat/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
+import 'package:firebase_auth/firebase_auth.dart';
 import '../components/rounded_button.dart';
+import 'chat_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
@@ -12,6 +14,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final user = FirebaseAuth.instance;
+  late String email;
+  late String password;
+
   @override
   Widget build(BuildContext context) {
     timeDilation = 2;
@@ -37,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               keyboardType: TextInputType.emailAddress,
               textAlign: TextAlign.center,
               onChanged: (value) {
+                email = value;
                 //Do something with the user input.
               },
               decoration:
@@ -49,8 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
               textAlign: TextAlign.center,
               onChanged: (value) {
-                //Do something with the user input.
+                password = value;
               },
+              //Do something with the user input.
               decoration: kTextFieldDecoration.copyWith(
                   hintText: 'Enter your password'),
             ),
@@ -58,15 +66,24 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 24.0,
             ),
             RoundedButton(
+                text: 'Log in',
                 color: Colors.lightBlueAccent,
-                onPress: () {
-                  Navigator.pushNamed(
-                    context,
-                    WelcomeScreen.id,
-                  );
-                  //Go to registration screen.
-                },
-                text: 'Log in'),
+                onPress: () async {
+                  try {
+                    UserCredential userCredential =
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: email,
+                      password: password,
+                    );
+                    if (user != null) {
+                      Navigator.pushNamed(context, ChatScreen.id);
+                    }
+                  } catch (e) {
+                    print(e);
+                  }
+                }
+                //Go to registration screen.
+                ),
           ],
         ),
       ),
