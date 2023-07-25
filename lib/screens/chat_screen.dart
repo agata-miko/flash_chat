@@ -11,6 +11,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final messageTextController = TextEditingController();
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   late String loggedInUser;
@@ -70,33 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('messages').snapshots(),
-              builder: (context, snapshot) {
-                List<Text> messageWidgets = [];
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator(backgroundColor: Colors.lightBlueAccent,),);
-                }
-                final messages = snapshot.data!.docs;
-
-                for (var message in messages) {
-                final messageText = message['text'];
-                final messageSender = message['sender'];
-                final messageWidget =
-                Text('$messageSender said $messageText');
-                messageWidgets.add(messageWidget);
-                }
-                return Column(
-                children: messageWidgets,
-                );
-                //  else {
-                //   return Container(
-                //     alignment: Alignment.center,
-                //     child: Text('No data available.'),
-                //   );
-                // }
-                },
-            ),
+            MessagesStream(firestore: _firestore),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -104,6 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: <Widget>[
                   Expanded(
                     child: TextField(
+                      controller: messageTextController,
                       onChanged: (value) {
                         messageText = value;
                       },
@@ -112,6 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   TextButton(
                     onPressed: () {
+                      messageTextController.clear();
                       //messageText + loggedInUser
                       _firestore.collection('messages').add({
                         'sender': loggedInUser,
@@ -131,5 +108,79 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+}
+
+class MessagesStream extends StatelessWidget {
+  const MessagesStream({
+    super.key,
+    required FirebaseFirestore firestore,
+  }) : _firestore = firestore;
+
+  final FirebaseFirestore _firestore;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('messages').snapshots(),
+      builder: (context, snapshot) {
+        List<MessageBubble> messageBubbles = [];
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.lightBlueAccent,
+            ),
+          );
+        }
+        final messages = snapshot.data!.docs;
+
+        for (var message in messages) {
+          final messageText = message['text'];
+          final messageSender = message['sender'];
+          final messageBubble =
+              MessageBubble(sender: messageSender, text: messageText);
+
+          messageBubbles.add(messageBubble);
+        }
+        return Expanded(
+          child: ListView(
+            padding:
+                EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+            children: messageBubbles,
+          ),
+        );
+      },
+    );
+  }
+}
+
+
+class MessageBubble extends StatelessWidget {
+  MessageBubble({required this.sender, required this.text});
+
+  final String sender;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(sender, style: TextStyle(fontSize: 10, color: Colors.black54),),
+                Material(
+            elevation: 5.0,
+                color: Colors.lightBlueAccent,
+                borderRadius: BorderRadius.circular(30),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Text(
+                    '$text',
+                    style: TextStyle(color: Colors.white, fontSize: 12.0),
+                  ),
+                )),
+              ],
+        ));
   }
 }
