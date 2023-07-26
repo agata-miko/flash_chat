@@ -3,6 +3,9 @@ import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+final _firestore = FirebaseFirestore.instance;
+late User loggedInUser;
+
 class ChatScreen extends StatefulWidget {
   static const String id = 'chat_screen';
 
@@ -12,9 +15,9 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final messageTextController = TextEditingController();
-  final _firestore = FirebaseFirestore.instance;
+
   final _auth = FirebaseAuth.instance;
-  late String loggedInUser;
+
   late String messageText;
 
   @override
@@ -25,7 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getCurrentUser() {
     try {
-      final user = _auth.currentUser!.email;
+      final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         loggedInUser = user;
       }
@@ -91,8 +94,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       messageTextController.clear();
                       //messageText + loggedInUser
                       _firestore.collection('messages').add({
-                        'sender': loggedInUser,
+                        'sender': loggedInUser.email,
                         'text': messageText,
+                        'timestamp': FieldValue.serverTimestamp(),
                       });
                       print('dziala');
                     },
@@ -122,7 +126,7 @@ class MessagesStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('messages').snapshots(),
+      stream: _firestore.collection('messages').orderBy('timestamp').snapshots(),
       builder: (context, snapshot) {
         List<MessageBubble> messageBubbles = [];
         if (!snapshot.hasData) {
@@ -137,15 +141,20 @@ class MessagesStream extends StatelessWidget {
         for (var message in messages) {
           final messageText = message['text'];
           final messageSender = message['sender'];
-          final messageBubble =
-              MessageBubble(sender: messageSender, text: messageText);
+
+          final currentUser = loggedInUser.email;
+
+          final messageBubble = MessageBubble(
+              sender: messageSender,
+              text: messageText,
+              isMe: currentUser == messageSender);
 
           messageBubbles.add(messageBubble);
         }
+
         return Expanded(
           child: ListView(
-            padding:
-                EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
             children: messageBubbles,
           ),
         );
@@ -154,33 +163,55 @@ class MessagesStream extends StatelessWidget {
   }
 }
 
-
 class MessageBubble extends StatelessWidget {
-  MessageBubble({required this.sender, required this.text});
+  MessageBubble({required this.sender, required this.text, required this.isMe});
 
   final String sender;
   final String text;
+  final bool isMe;
+
+  Color _getBubbleColor(bool isMe) {
+    return isMe ? Colors.lightBlueAccent : Colors.white;
+  }
+
+  Color _getFontColor(bool isMe) {
+    return isMe ? Colors.white : Colors.blueGrey;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(sender, style: TextStyle(fontSize: 10, color: Colors.black54),),
-                Material(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Text(
+            sender,
+            style: TextStyle(fontSize: 10, color: Colors.black54),
+          ),
+          Material(
             elevation: 5.0,
-                color: Colors.lightBlueAccent,
-                borderRadius: BorderRadius.circular(30),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  child: Text(
-                    '$text',
-                    style: TextStyle(color: Colors.white, fontSize: 12.0),
-                  ),
-                )),
-              ],
-        ));
+            color: _getBubbleColor(isMe),
+            borderRadius: isMe
+                ? BorderRadius.only(
+                    topLeft: Radius.circular(30.0),
+                    bottomLeft: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0))
+                : BorderRadius.only(
+                    bottomLeft: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0),
+                    topRight: Radius.circular(30.0)),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              child: Text(
+                '$text',
+                style: TextStyle(color: _getFontColor(isMe), fontSize: 12.0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
